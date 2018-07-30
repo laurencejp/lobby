@@ -5,7 +5,7 @@ const chalk = require("chalk");
 const chalkAddress = chalk.yellowBright;
 const chalkGreen = chalk.greenBright;
 const chalkRed = chalk.redBright;
-const port = 8082;
+const port = process.env.PORT;
 let playersInLobby = [];
 
 //When user sends request to root, send back client.html

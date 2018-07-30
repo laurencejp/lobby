@@ -1,7 +1,8 @@
 const app = require("express")();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
-const port = process.env.PORT;
+//const port = process.env.PORT;
+const port = 8082;
 let playersInLobby = [];
 
 //When user sends request to root, send back client.html
@@ -11,17 +12,8 @@ app.get("/", function(req, res){
 
 io.on('connection', function(socket){
 
-    //Gets ip address of new socket, formats it and logs the connection.
-    const address = socket.request.connection.remoteAddress.substring(7);
-    logEvent("connect", address);
-
     //When client connects emit this to prompt a refresh if they were in the lobby before server started
     io.to(socket.id).emit("inLobbyCheck");
-
-    //On disconnect, log the disconnection.
-    socket.on('disconnect', function(){
-        logEvent("disconnect", address);
-    });
     
     //Calls sendPlayerNames function with global as false as getPlayerNames is only sent when a page refresh occurs.
     socket.on("getPlayerNames", function(){
@@ -51,17 +43,16 @@ io.on('connection', function(socket){
     //Appends the name to the playersInLobby array, logs the join and then emits name list to all
     socket.on("addNameToLobby", function(nickname){
         playersInLobby.push(nickname);
-        logEvent("joinLobby", address, nickname);
         sendPlayerNames(true);
     });
 
     //Removes the name from the playersInLobby array, logs the leave and then emits name list to all
     socket.on("removeNameFromLobby", function(nickname){
         playersInLobby.splice(playersInLobby.indexOf(nickname), 1);
-        logEvent("leaveLobby", address, nickname);
         sendPlayerNames(true);
     });
 });
 
 server.listen(port, function() {
+    
 });

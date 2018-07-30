@@ -1,10 +1,10 @@
 const app = require("express")();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
-const chalk = require("chalk");
-const chalkAddress = chalk.yellowBright;
-const chalkGreen = chalk.greenBright;
-const chalkRed = chalk.redBright;
+//const chalk = require("chalk");
+//const chalkAddress = chalk.yellowBright;
+//const chalkGreen = chalk.greenBright;
+//const chalkRed = chalk.redBright;
 const port = process.env.PORT;
 let playersInLobby = [];
 
@@ -68,8 +68,8 @@ io.on('connection', function(socket){
 });
 
 server.listen(port, function() {
-    console.log(chalkGreen("Server Started"));
-    console.log("Listening on port " + chalk.cyanBright(port));
+    //console.log(chalkGreen("Server Started"));
+    //console.log("Listening on port " + chalk.cyanBright(port));
 });
 
 //#region Code snippets
@@ -82,16 +82,16 @@ io.sockets.clients((error, clients) => {
 function logEvent(event, data1, data2) {
     switch(event) {
         case "connect":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " " + chalkGreen("connected"));
+            //console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " " + chalkGreen("connected"));
             break;
         case "disconnect":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " " + chalkRed("disconnected"));
+            //console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " " + chalkRed("disconnected"));
             break;
         case "joinLobby":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " as " + chalk.yellow(data2) + ": " + chalk.green("joined lobby"));
+            //console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " as " + chalk.yellow(data2) + ": " + chalk.green("joined lobby"));
             break;
         case "leaveLobby":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " as " + chalk.yellow(data2) + ": " + chalk.red("left lobby"));
+            //console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " as " + chalk.yellow(data2) + ": " + chalk.red("left lobby"));
             break;
     }
 }

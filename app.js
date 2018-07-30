@@ -1,8 +1,7 @@
 const app = require("express")();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
-//const port = process.env.PORT;
-const port = 8082;
+const port = process.env.PORT;
 let playersInLobby = [];
 
 //When user sends request to root, send back client.html

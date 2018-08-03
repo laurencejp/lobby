@@ -1,11 +1,7 @@
 const app = require("express")();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
-const chalk = require("chalk");
-const chalkAddress = chalk.yellowBright;
-const chalkGreen = chalk.greenBright;
-const chalkRed = chalk.redBright;
-const port = 8082;
+const port = process.env.PORT;
 let playersInLobby = [];
 
 //When user sends request to root, send back client.html
@@ -19,17 +15,8 @@ app.get("/client.js", function(req, res){
 
 io.on('connection', function(socket){
 
-    //Gets ip address of new socket, formats it and logs the connection.
-    const address = socket.request.connection.remoteAddress.substring(7);
-    logEvent("connect", address);
-
     //When client connects emit this to prompt a refresh if they were in the lobby before server started
     io.to(socket.id).emit("inLobbyCheck");
-
-    //On disconnect, log the disconnection.
-    socket.on('disconnect', function(){
-        logEvent("disconnect", address);
-    });
     
     //Calls sendPlayerNames function with global as false as getPlayerNames is only sent when a page refresh occurs.
     socket.on("getPlayerNames", function(){
@@ -56,55 +43,18 @@ io.on('connection', function(socket){
         }
     });
 
-    //Appends the name to the playersInLobby array, logs the join and then emits name list to all
+    //Appends the name to the playersInLobby array and then emits name list to all
     socket.on("addNameToLobby", function(nickname){
         playersInLobby.push(nickname);
-        logEvent("joinLobby", address, nickname);
         sendPlayerNames(true);
     });
 
-    //Removes the name from the playersInLobby array, logs the leave and then emits name list to all
+    //Removes the name from the playersInLobby array and then emits name list to all
     socket.on("removeNameFromLobby", function(nickname){
         playersInLobby.splice(playersInLobby.indexOf(nickname), 1);
-        logEvent("leaveLobby", address, nickname);
         sendPlayerNames(true);
     });
 });
 
 server.listen(port, function() {
-    console.log(chalkGreen("Server Started"));
-    console.log("Listening on port " + chalk.cyanBright(port));
 });
-
-//#region Code snippets
-/*Displays all connected client ids. Ids are stored in a cookie.
-io.sockets.clients((error, clients) => {
-    if (error) throw error;
-    console.log(clients);
-})*/
-
-function logEvent(event, data1, data2) {
-    switch(event) {
-        case "connect":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " " + chalkGreen("connected"));
-            break;
-        case "disconnect":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " " + chalkRed("disconnected"));
-            break;
-        case "joinLobby":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " as " + chalk.yellow(data2) + ": " + chalk.green("joined lobby"));
-            break;
-        case "leaveLobby":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " as " + chalk.yellow(data2) + ": " + chalk.red("left lobby"));
-            break;
-    }
-}
-
-function getFormattedDate(){
-    var d = new Date();
-
-    d = d.getFullYear() + "-" + ('0' + (d.getMonth() + 1)).slice(-2) + "-" + ('0' + d.getDate()).slice(-2) + " " + ('0' + d.getHours()).slice(-2) + ":" + ('0' + d.getMinutes()).slice(-2) + ":" + ('0' + d.getSeconds()).slice(-2);
-
-    return d;
-}
-//#endregion

@@ -1,57 +1,25 @@
 let socket = io();
 
-$(document).ready(function () {    
-    $("#page").html("");
-
-    //Sets inlobby cookie to false if first visit to page
-    if(getCookie("inLobby") == "") {
-        setCookie("inLobby", "false", 3);
-        deleteCookie("nickname");
-    }
-
-    if (getCookie("inLobby") == "true") {
-        showInLobbyScreen();
-    } else {
-        showJoinLobbyScreen();
-    }
-
-
-    socket.emit('pageLoad');
-});
-
 //Check if no players are in lobby (server restart etc.), if so then remove from lobby on client side and then only refresh player names if in lobby
 socket.on("refresh", function(nameString) {
     if (nameString == "") {
         reset();
     } else {
-        if (getCookie("inLobby") == "true") {
-            $("#page").html("");
-            var title = document.createElement("p");
-            title.appendChild(document.createTextNode("Welcome " + getCookie("nickname")));
-            $("#page").append(title);
-
+        if (getCookie("lobby") != "") {
+            displayPage("inLobbyScreen.html");
+            document.getElementById("title").innerHTML = "Welcome " + getCookie("nickname");
+            document.getElementById("lobbyCode").innerHTML = "Lobby code: <b>" + getCookie("lobby") + "</b>";
             let names = nameString.split(',')
-            let table = document.createElement("table");
-            let tableBody = document.createElement("tbody");
-            let topRow = document.createElement("tr");
-            let tableTitle = document.createElement("th");
-            tableTitle.appendChild(document.createTextNode("Players in lobby"));
-            topRow.appendChild(tableTitle);
-            tableBody.appendChild(topRow);
+            
+            //Generates the list of players and shows it to the user
             for (i=0; i<names.length; i++) {
                 let row = document.createElement("tr");
                 let data = document.createElement("td");
                 data.appendChild(document.createTextNode(names[i]));
                 row.appendChild(data);
-                tableBody.appendChild(row);
+                document.getElementById("tbody").appendChild(row);
             }
-            table.appendChild(tableBody);
-            $("#page").append(table);
-
-            var leaveButton = document.createElement("button");
-            leaveButton.innerHTML = "Leave Lobby";
-            leaveButton.addEventListener('click', removePlayerFromLobby);
-            $("#page").append(leaveButton);     
+            document.getElementById("leaveLobbyButton").addEventListener('click', removePlayerFromLobby);    
         } else {
         showJoinLobbyScreen();
     }   
@@ -59,57 +27,81 @@ socket.on("refresh", function(nameString) {
 });
 
 socket.on("inLobbyCheck", function(){
-    //reset();
+    if (getCookie("lobby") == "") {
+        deleteCookie("nickname");
+        showJoinLobbyScreen();
+    } else {
+        socket.emit("checkForLobby", getCookie("lobby"));
+    }    
+});
+
+socket.on("reset", function(){
+    reset();
 });
 
 function reset() {
-    setCookie("inLobby", "false", 3);
+    setCookie("lobby", "false", 3);
     deleteCookie("nickname");
     showJoinLobbyScreen();
 }
 
 function removePlayerFromLobby() {
   var nickname = getCookie("nickname");
-  setCookie("inLobby", false, 3);
+  var lobbyCode = getCookie("lobby");
+  deleteCookie("lobby");
+  //setCookie("lobby", false, 3);
   deleteCookie("nickname");
-  socket.emit("removeNameFromLobby", nickname);
+  socket.emit("removeNameFromLobby", lobbyCode + "," + nickname);
   showJoinLobbyScreen();
 }
 
 //On client side, global becomes false as this is only called when a page refresh occurs
 function showInLobbyScreen() {
-    socket.emit("getPlayerNames");
+    socket.emit("getPlayerNames", getCookie("lobby"));
 }
 
 function showJoinLobbyScreen() {
-    $("#page").html("");
-    let title = document.createElement("p");
-    title.id = "title";
-    title.appendChild(document.createTextNode("Enter name:"));
-    $("#page").append(title);
-    let input = document.createElement("input");
-    input.id = "input";
-    $("#page").append(input);
-    let joinButton = document.createElement("button");
-    joinButton.innerHTML = "Join Lobby";
-    joinButton.addEventListener('click', validateName);
-    $("#page").append(joinButton);   
+    displayPage("joinLobbyScreen.html");
+    //If user creates lobby, send server their socket id
+    document.getElementById("createLobbyButton").addEventListener("click", function() {
+        socket.emit("createLobby", document.getElementById("nickname").value);
+    });
+
+    document.getElementById("joinLobbyButton").addEventListener("click", function(){
+        validateJoinCredentials();
+    });
 }
 
-function validateName() {
-  var nickname = $("#input").val();
-  socket.emit("validateName", nickname);
+function validateJoinCredentials() {
+  var nickname = document.getElementById("nickname").value;
+  var lobbyCode = document.getElementById("lobbyCode").value;
+  socket.emit("validateJoinCredentials", lobbyCode + "," + nickname);
 }
 
-socket.on("nameValid", function(nickname) {
-    socket.emit("addNameToLobby", nickname); //This also sends updated player names to everyone
-    setCookie("inLobby", "true", 3);
+socket.on("credentialsValid", function(codeAndNickname) {
+    let lobbyCode = codeAndNickname.split(",")[0];
+    let nickname = codeAndNickname.split(",")[1];
+    socket.emit("addNameToLobby", codeAndNickname); //This also sends updated player names to everyone
+    setCookie("lobby", lobbyCode, 3);
     setCookie("nickname", nickname, 3);
 });
 
-socket.on("nameInvalid", function() {
-    $("#title").html("NAME ALREADY TAKEN OR INVALID - Enter name:")
+socket.on("credentialsInvalid", function() {
+    document.getElementById("title").innerHTML = "NAME OR LOBBY CODE INVALID";
 });
+
+function displayPage(page){
+    var xmlHttp = new XMLHttpRequest();
+
+    xmlHttp.onreadystatechange = function() {
+         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+         {
+            document.getElementById("page").innerHTML = xmlHttp.responseText;
+         }
+     };
+     xmlHttp.open("GET", page, false);
+     xmlHttp.send(null);
+}
 
 //#region Cookies
 function setCookie(cname, cvalue, exdays) {

@@ -21,6 +21,10 @@ app.get("/inLobbyScreen.html", function(req, res){
     res.sendFile(__dirname + "/pages/inLobbyScreen.html");
 });
 
+app.get("/favicon.png", function(req, res){
+    res.sendFile(__dirname + "/favicon.png");
+});
+
 io.on('connection', function(socket){
 
     //When client connects emit this to prompt a refresh if they were in the lobby before server started

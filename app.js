@@ -21,8 +21,8 @@ app.get("/inLobbyScreen.html", function(req, res){
     res.sendFile(__dirname + "/pages/inLobbyScreen.html");
 });
 
-app.get("/favicon.png", function(req, res){
-    res.sendFile(__dirname + "/favicon.png");
+app.get("/includes/bootstrap.min.css", function(req, res){
+    res.sendFile(__dirname + "/includes/bootstrap.min.css");
 });
 
 io.on('connection', function(socket){

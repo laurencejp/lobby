@@ -8,16 +8,15 @@ socket.on("refresh", function(nameString) {
         if (getCookie("lobby") != "") {
             displayPage("inLobbyScreen.html");
             document.getElementById("title").innerHTML = "Welcome " + getCookie("nickname");
-            document.getElementById("lobbyCode").innerHTML = "Lobby code: <b>" + getCookie("lobby") + "</b>";
+            document.getElementById("lobbyCode").innerHTML = "Lobby code: <code>" + getCookie("lobby") + "</code>";
             let names = nameString.split(',')
             
             //Generates the list of players and shows it to the user
             for (i=0; i<names.length; i++) {
-                let row = document.createElement("tr");
-                let data = document.createElement("td");
-                data.appendChild(document.createTextNode(names[i]));
-                row.appendChild(data);
-                document.getElementById("tbody").appendChild(row);
+                let name = document.createElement("p");
+                name.appendChild(document.createTextNode(names[i]));
+                name.classList.add("card-text");
+                document.getElementById("card-body").appendChild(name);              
             }
             document.getElementById("leaveLobbyButton").addEventListener('click', removePlayerFromLobby);    
         } else {

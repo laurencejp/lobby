@@ -25,6 +25,10 @@ app.get("/includes/bootstrap.min.css", function(req, res){
     res.sendFile(__dirname + "/includes/bootstrap.min.css");
 });
 
+app.get("/favicon.png", function(req, res){
+    res.sendFile(__dirname + "/favicon.png");
+});
+
 io.on('connection', function(socket){
 
     //When client connects emit this to prompt a refresh if they were in the lobby before server started

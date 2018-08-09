@@ -1,12 +1,6 @@
 const app = require("express")();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
-/*
-const chalk = require("chalk");
-const chalkAddress = chalk.yellowBright;
-const chalkGreen = chalk.greenBright;
-const chalkRed = chalk.redBright;
-*/
 const port = process.env.PORT;
 let lobbies = [];
 
@@ -31,23 +25,14 @@ app.get("/includes/bootstrap.min.css", function(req, res){
     res.sendFile(__dirname + "/includes/bootstrap.min.css");
 });
 
-io.on('connection', function(socket){
+app.get("/favicon.png", function(req, res){
+    res.sendFile(__dirname + "/favicon.png");
+});
 
-    /*
-    //Gets ip address of new socket, formats it and logs the connection.
-    const address = socket.request.connection.remoteAddress.substring(7);
-    logEvent("connect", address);
-    */
+io.on('connection', function(socket){
 
     //When client connects emit this to prompt a refresh if they were in the lobby before server started
     io.to(socket.id).emit("inLobbyCheck");
-
-    /*
-    //On disconnect, log the disconnection.
-    socket.on('disconnect', function(){
-        logEvent("disconnect", address);
-    });
-    */
     
     //Calls sendPlayerNames function with global as false as getPlayerNames is only sent when a page refresh occurs.
     socket.on("getPlayerNames", function(lobbyCode){
@@ -127,9 +112,6 @@ io.on('connection', function(socket){
         let index = getIndexOfLobby(lobbyCode)
 
         lobbies[index].members.push(nickname);
-        /*
-        logEvent("joinLobby", address, lobbyCode, nickname);
-        */
 
         //Join the room so messages can be recieved for this specific lobby.
         socket.join(lobbyCode, function(){
@@ -145,9 +127,6 @@ io.on('connection', function(socket){
 
         //Removes the nickname from the members of the given lobby
         lobbies[index].members.splice(lobbies[index].members.indexOf(nickname), 1);
-        /*
-        logEvent("leaveLobby", address, lobbyCode, nickname);
-        */
 
         socket.leave(lobbyCode, function(){
             //If the lobby is now empty, remove the lobby from lobbies array, if not then broadcast player names
@@ -190,38 +169,4 @@ io.on('connection', function(socket){
 });
 
 server.listen(port, function() {
-    /*
-    console.log(chalkGreen("Server Started"));
-    console.log("Listening on port " + chalk.cyanBright(port));
-    */
 });
-
-/*
-//#region Code snippets
-
-function logEvent(event, data1, data2, data3) {
-    switch(event) {
-        case "connect":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " " + chalkGreen("connected"));
-            break;
-        case "disconnect":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + " " + chalkRed("disconnected"));
-            break;
-        case "joinLobby":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + chalk.green(" joined ") + chalk.blue(data2) + " as " + chalk.yellow(data3));
-            break;
-        case "leaveLobby":
-            console.log("[" + getFormattedDate() + "] " + chalkAddress(data1) + chalk.red(" left ") + chalk.blue(data2) + " as " + chalk.yellow(data3));
-            break;
-    }
-}
-
-function getFormattedDate(){
-    var d = new Date();
-
-    d = d.getFullYear() + "-" + ('0' + (d.getMonth() + 1)).slice(-2) + "-" + ('0' + d.getDate()).slice(-2) + " " + ('0' + d.getHours()).slice(-2) + ":" + ('0' + d.getMinutes()).slice(-2) + ":" + ('0' + d.getSeconds()).slice(-2);
-
-    return d;
-}
-//#endregion
-*/
